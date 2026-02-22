@@ -58,7 +58,7 @@ export default class BijiSyncPlugin extends Plugin {
 
     // Auto-sync initialization: wait for MetadataCache readiness
     if (this.settings.autoSyncEnabled) {
-      if (this.app.metadataCache.resolved) {
+      if ((this.app.metadataCache as any).resolved) {
         this.startAutoSync();
       } else {
         const resolvedRef = this.app.metadataCache.on('resolved', () => {
