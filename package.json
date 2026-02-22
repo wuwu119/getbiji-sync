@@ -1,7 +1,7 @@
 {
   "name": "getbiji-sync",
   "version": "0.1.0",
-  "description": "Obsidian plugin to sync Get笔记 (getbiji.com) notes",
+  "description": "Obsidian plugin to sync Get笔记 (biji.com) notes",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",

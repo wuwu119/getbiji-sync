@@ -1,6 +1,6 @@
 # GetBiji Sync
 
-Sync your [Get笔记](https://getbiji.com) notes into Obsidian as Markdown files.
+Sync your [Get笔记](https://biji.com) notes into Obsidian as Markdown files.
 
 ## Features
 
@@ -31,7 +31,7 @@ Sync your [Get笔记](https://getbiji.com) notes into Obsidian as Markdown files
 
 ### Getting Your Refresh Token
 
-1. Open [getbiji.com](https://getbiji.com) in your browser and log in
+1. Open [biji.com](https://biji.com) in your browser and log in
 2. Open Developer Tools (F12)
 3. Go to **Application** → **Local Storage** → `www.biji.com`
 4. Copy the value of `refresh_token`

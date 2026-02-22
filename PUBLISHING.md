@@ -37,7 +37,7 @@ git push origin 0.1.0
      "id": "getbiji-sync",
      "name": "GetBiji Sync",
      "author": "wuwu",
-     "description": "Sync Get笔记 (getbiji.com) notes to your Obsidian vault",
+     "description": "Sync Get笔记 (biji.com) notes to your Obsidian vault",
      "repo": "wuwu119/getbiji-sync"
    }
    ```
