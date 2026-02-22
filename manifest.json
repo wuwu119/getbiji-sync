@@ -1,0 +1,10 @@
+{
+  "id": "getbiji-sync",
+  "name": "GetBiji Sync",
+  "version": "0.1.0",
+  "minAppVersion": "0.15.0",
+  "description": "Sync Get笔记 (getbiji.com) notes to your Obsidian vault",
+  "author": "wuwu",
+  "authorUrl": "https://github.com/wuwu119",
+  "isDesktopOnly": true
+}
