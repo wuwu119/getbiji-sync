@@ -12,11 +12,14 @@ import { checkTokenExpiration } from "./auth";
 import { AuthFatalError } from "./api";
 import { syncBiji } from "./sync";
 
+const MAX_AUTH_FAILURES = 3;
+
 export default class BijiSyncPlugin extends Plugin {
   settings: BijiSyncSettings = DEFAULT_SETTINGS;
   private syncing = false;
   private syncAbortController: AbortController | null = null;
   private autoSyncIntervalId: number | null = null;
+  private consecutiveAuthFailures = 0;
 
   async onload() {
     await this.loadSettings();
@@ -74,6 +77,7 @@ export default class BijiSyncPlugin extends Plugin {
 
   private startAutoSync() {
     this.stopAutoSync();
+    this.consecutiveAuthFailures = 0;
     const minutes = Math.max(this.settings.autoSyncInterval, 5);
     const ms = minutes * 60 * 1000;
     this.autoSyncIntervalId = window.setInterval(() => {
@@ -119,14 +123,23 @@ export default class BijiSyncPlugin extends Plugin {
       await syncBiji(this, this.syncAbortController.signal, {
         silent: options?.silent,
       });
+      // Reset auth failure counter on success
+      this.consecutiveAuthFailures = 0;
     } catch (err) {
       if (err instanceof AuthFatalError) {
         console.error("Auth failed:", err.message, err.cause);
-        new Notice(
-          "Authentication failed, please update refresh token in settings",
-        );
         if (options?.silent) {
-          this.stopAutoSync();
+          this.consecutiveAuthFailures++;
+          if (this.consecutiveAuthFailures >= MAX_AUTH_FAILURES) {
+            this.stopAutoSync();
+            new Notice(
+              `Auto-sync stopped: authentication failed ${MAX_AUTH_FAILURES} times, please update refresh token`,
+            );
+          }
+        } else {
+          new Notice(
+            "Authentication failed, please update refresh token in settings",
+          );
         }
       } else {
         console.error("Sync failed:", err);

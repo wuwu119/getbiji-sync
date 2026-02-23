@@ -299,9 +299,10 @@ describe("triggerSync silent mode", () => {
     expect(noticeCalls).not.toContain("Syncing Get笔记...");
   });
 
-  it("should create Notice AND stop auto-sync for AuthFatalError in silent mode", async () => {
+  it("should NOT stop auto-sync after 1 AuthFatalError in silent mode", async () => {
     const plugin = createPlugin({ autoSyncEnabled: true });
     (plugin as any).startAutoSync();
+    mockClearInterval.mockClear();
 
     mockSyncBiji.mockRejectedValueOnce(
       new MockAuthFatalError("Token expired"),
@@ -309,14 +310,56 @@ describe("triggerSync silent mode", () => {
 
     await plugin.triggerSync({ silent: true });
 
-    // Auth error Notice should still be shown
-    const noticeCalls = MockNotice.mock.calls.map((c: any[]) => c[0]);
-    expect(noticeCalls).toContain(
-      "Authentication failed, please update refresh token in settings",
-    );
+    // Auto-sync should NOT be stopped after 1 failure
+    expect(mockClearInterval).not.toHaveBeenCalled();
+  });
 
-    // Auto-sync should be stopped
+  it("should stop auto-sync after 3 consecutive AuthFatalErrors in silent mode", async () => {
+    const plugin = createPlugin({ autoSyncEnabled: true });
+    (plugin as any).startAutoSync();
+    mockClearInterval.mockClear();
+
+    for (let i = 0; i < 3; i++) {
+      mockSyncBiji.mockRejectedValueOnce(
+        new MockAuthFatalError("Token expired"),
+      );
+      await plugin.triggerSync({ silent: true });
+    }
+
+    // After 3 failures, auto-sync should be stopped
     expect(mockClearInterval).toHaveBeenCalled();
+    const noticeCalls = MockNotice.mock.calls.map((c: any[]) => c[0]);
+    expect(noticeCalls.some((m: string) =>
+      m.includes("Auto-sync stopped") && m.includes("3 times"),
+    )).toBe(true);
+  });
+
+  it("should reset auth failure counter on successful sync", async () => {
+    const plugin = createPlugin({ autoSyncEnabled: true });
+    (plugin as any).startAutoSync();
+    mockClearInterval.mockClear();
+
+    // 2 failures
+    for (let i = 0; i < 2; i++) {
+      mockSyncBiji.mockRejectedValueOnce(
+        new MockAuthFatalError("Token expired"),
+      );
+      await plugin.triggerSync({ silent: true });
+    }
+
+    // 1 success resets counter
+    mockSyncBiji.mockResolvedValueOnce(undefined);
+    await plugin.triggerSync({ silent: true });
+
+    // 2 more failures — should NOT stop (counter was reset)
+    for (let i = 0; i < 2; i++) {
+      mockSyncBiji.mockRejectedValueOnce(
+        new MockAuthFatalError("Token expired"),
+      );
+      await plugin.triggerSync({ silent: true });
+    }
+
+    expect(mockClearInterval).not.toHaveBeenCalled();
   });
 
   it("should return silently when syncing=true and silent=true (no Notice)", async () => {
