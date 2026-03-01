@@ -2,8 +2,24 @@
 // OUTPUT: AuthFatalError, requestWithRetry, fetchNotes, fetchLinkDetail, apiHeaders, API_BASE, DETAIL_DELAY
 // POS: API client — HTTP requests with retry logic, pagination, link detail fetching
 
-import { requestUrl, RequestUrlParam } from "obsidian";
+import { requestUrl, RequestUrlParam, RequestUrlResponse } from "obsidian";
 import type { BijiNote } from "./types";
+
+// ── HttpError type guard ────────────────────────────────────────────
+// Obsidian's requestUrl throws objects with { status, headers } on HTTP errors.
+
+interface HttpError {
+  status: number;
+  headers?: Record<string, string>;
+}
+
+function isHttpError(err: unknown): err is HttpError {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    typeof (err as Record<string, unknown>).status === "number"
+  );
+}
 
 // ── AuthFatalError ──────────────────────────────────────────────────
 // Thrown when authentication fails after JWT refresh+retry.
@@ -61,12 +77,13 @@ export function apiHeaders(jwt: string): Record<string, string> {
 export async function requestWithRetry(
   params: RequestUrlParam,
   refreshJwtCallback: JwtRefreshCallback,
-): Promise<any> {
+): Promise<RequestUrlResponse> {
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
       return await requestUrl(params);
-    } catch (err: any) {
-      const status = err?.status;
+    } catch (err: unknown) {
+      const httpErr = isHttpError(err) ? err : null;
+      const status = httpErr?.status;
 
       // ── 401 / 403: JWT expired — refresh and retry once ──
       if (status === 401 || status === 403) {
@@ -78,26 +95,26 @@ export async function requestWithRetry(
           };
           try {
             return await requestUrl(params);
-          } catch (retryErr: any) {
-            if (retryErr?.status === 401 || retryErr?.status === 403) {
+          } catch (retryErr: unknown) {
+            if (isHttpError(retryErr) && (retryErr.status === 401 || retryErr.status === 403)) {
               throw new AuthFatalError(
                 "Authentication failed after refresh",
-                retryErr,
+                retryErr instanceof Error ? retryErr : undefined,
               );
             }
             throw retryErr;
           }
-        } catch (refreshErr) {
+        } catch (refreshErr: unknown) {
           if (refreshErr instanceof AuthFatalError) throw refreshErr;
           throw new AuthFatalError(
             "JWT refresh failed",
-            refreshErr as Error,
+            refreshErr instanceof Error ? refreshErr : undefined,
           );
         }
       }
 
       // ── Other 4xx (except 429): immediate fail ──
-      if (status && status >= 400 && status < 500 && status !== 429) {
+      if (status !== undefined && status >= 400 && status < 500 && status !== 429) {
         throw err;
       }
 
@@ -105,8 +122,8 @@ export async function requestWithRetry(
       if (attempt === MAX_RETRIES - 1) throw err;
 
       let delay = BACKOFF_BASE * Math.pow(2, attempt);
-      if (status === 429) {
-        const retryAfter = err?.headers?.["retry-after"];
+      if (status === 429 && httpErr) {
+        const retryAfter = httpErr.headers?.["retry-after"];
         if (retryAfter) {
           delay = Math.max(parseInt(retryAfter, 10) * 1000, delay);
         }
@@ -115,6 +132,8 @@ export async function requestWithRetry(
       await new Promise((r) => setTimeout(r, delay));
     }
   }
+  // Unreachable: loop always returns or throws on last attempt
+  throw new Error("requestWithRetry: exhausted retries");
 }
 
 // ── fetchNotes ──────────────────────────────────────────────────────

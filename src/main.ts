@@ -2,7 +2,7 @@
 // OUTPUT: BijiSyncPlugin (main plugin class)
 // POS: Entry point — plugin lifecycle, settings integration, sync triggering, commands
 
-import { Notice, Plugin } from "obsidian";
+import { MetadataCache, Notice, Plugin } from "obsidian";
 import {
   BijiSyncSettings,
   BijiSyncSettingTab,
@@ -61,7 +61,7 @@ export default class BijiSyncPlugin extends Plugin {
 
     // Auto-sync initialization: wait for MetadataCache readiness
     if (this.settings.autoSyncEnabled) {
-      if ((this.app.metadataCache as any).resolved) {
+      if ((this.app.metadataCache as MetadataCache & { resolved?: boolean }).resolved) {
         this.startAutoSync();
       } else {
         const resolvedRef = this.app.metadataCache.on('resolved', () => {
@@ -72,7 +72,7 @@ export default class BijiSyncPlugin extends Plugin {
       }
     }
 
-    console.log("Biji Sync plugin loaded");
+    console.debug("Biji Sync plugin loaded");
   }
 
   private startAutoSync() {
@@ -81,7 +81,7 @@ export default class BijiSyncPlugin extends Plugin {
     const minutes = Math.max(this.settings.autoSyncInterval, 5);
     const ms = minutes * 60 * 1000;
     this.autoSyncIntervalId = window.setInterval(() => {
-      this.triggerSync({ silent: true });
+      void this.triggerSync({ silent: true });
     }, ms);
     this.registerInterval(this.autoSyncIntervalId);
   }
@@ -104,7 +104,7 @@ export default class BijiSyncPlugin extends Plugin {
   onunload() {
     this.stopAutoSync();
     this.syncAbortController?.abort();
-    console.log("Biji Sync plugin unloaded");
+    console.debug("Biji Sync plugin unloaded");
   }
 
   async triggerSync(options?: { silent?: boolean }) {

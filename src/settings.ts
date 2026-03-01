@@ -35,17 +35,17 @@ export class BijiSyncSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    containerEl.createEl("h2", { text: "Get笔记 Sync Settings" });
+    new Setting(containerEl).setName("Get笔记 sync settings").setHeading();
 
     // Refresh token input (password field)
     new Setting(containerEl)
-      .setName("Refresh Token")
+      .setName("Refresh token")
       .setDesc(
         "浏览器打开 biji.com → F12 → Application → Local Storage → www.biji.com → refresh_token"
       )
       .addText((text) => {
         text.inputEl.type = "password";
-        text.inputEl.style.width = "100%";
+        text.inputEl.addClass("getbiji-token-input");
         text
           .setPlaceholder("Enter refresh token")
           .setValue(this.plugin.settings.refreshToken)
@@ -57,7 +57,7 @@ export class BijiSyncSettingTab extends PluginSettingTab {
 
     // Target folder input
     new Setting(containerEl)
-      .setName("Target Folder")
+      .setName("Target folder")
       .setDesc("Folder where synced notes will be saved")
       .addText((text) =>
         text
@@ -71,7 +71,7 @@ export class BijiSyncSettingTab extends PluginSettingTab {
 
     // Auto sync toggle
     new Setting(containerEl)
-      .setName("Auto Sync")
+      .setName("Auto sync")
       .setDesc("Automatically sync at regular intervals")
       .addToggle((toggle) =>
         toggle
@@ -86,7 +86,7 @@ export class BijiSyncSettingTab extends PluginSettingTab {
 
     // Sync interval dropdown
     new Setting(containerEl)
-      .setName("Sync Interval")
+      .setName("Sync interval")
       .setDesc("Minutes between automatic syncs")
       .addDropdown((dropdown) => {
         dropdown
@@ -113,12 +113,12 @@ export class BijiSyncSettingTab extends PluginSettingTab {
       : "从未同步";
 
     new Setting(containerEl)
-      .setName("Last Sync Time")
+      .setName("Last sync time")
       .setDesc(formattedTime);
 
     // Reset sync state button
     new Setting(containerEl)
-      .setName("Reset Sync State")
+      .setName("Reset sync state")
       .setDesc("Clear sync cursor so next sync fetches all notes")
       .addButton((button) =>
         button.setButtonText("Reset").onClick(async () => {
