@@ -35,13 +35,13 @@ export class BijiSyncSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    new Setting(containerEl).setName("Get笔记 sync settings").setHeading();
+    new Setting(containerEl).setName("Get笔记 sync").setHeading();
 
     // Refresh token input (password field)
     new Setting(containerEl)
       .setName("Refresh token")
       .setDesc(
-        "浏览器打开 biji.com → F12 → Application → Local Storage → www.biji.com → refresh_token"
+        "浏览器打开 biji.com → F12 → application → local storage → www.biji.com → refresh_token"
       )
       .addText((text) => {
         text.inputEl.type = "password";

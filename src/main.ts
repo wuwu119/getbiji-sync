@@ -32,14 +32,14 @@ export default class BijiSyncPlugin extends Plugin {
     }
 
     // Ribbon icon for sync
-    this.addRibbonIcon("download", "Sync Get笔记", async () => {
+    this.addRibbonIcon("download", "Sync get笔记", async () => {
       await this.triggerSync();
     });
 
     // Command: sync now
     this.addCommand({
       id: "sync-biji-now",
-      name: "Sync Get笔记",
+      name: "Sync get笔记",
       callback: async () => {
         await this.triggerSync();
       },
@@ -48,7 +48,7 @@ export default class BijiSyncPlugin extends Plugin {
     // Command: cancel sync
     this.addCommand({
       id: "cancel-biji-sync",
-      name: "Cancel Get笔记 sync",
+      name: "Cancel get笔记 sync",
       callback: () => {
         if (this.syncAbortController) {
           this.syncAbortController.abort();
@@ -118,7 +118,7 @@ export default class BijiSyncPlugin extends Plugin {
     this.syncAbortController = new AbortController();
     try {
       if (!options?.silent) {
-        new Notice("Syncing Get笔记...");
+        new Notice("Syncing get笔记...");
       }
       await syncBiji(this, this.syncAbortController.signal, {
         silent: options?.silent,
