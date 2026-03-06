@@ -41,7 +41,7 @@ export class BijiSyncSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Refresh token")
       .setDesc(
-        "浏览器打开 biji.com → F12 → application → local storage → www.biji.com → refresh_token"
+        "浏览器打开 biji.com → f12 → application → local storage → www.biji.com → refresh_token"
       )
       .addText((text) => {
         text.inputEl.type = "password";
